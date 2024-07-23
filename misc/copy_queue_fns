@@ -1,0 +1,414 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   queue_fns.c                                        :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: achak <marvin@42.fr>                       +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/04/24 12:38:27 by achak             #+#    #+#             */
+/*   Updated: 2024/04/24 20:12:54 by achak            ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include "philo.h"
+/*
+#define PHILO_MAX 10
+
+typedef struct s_lst
+{
+	int		nbr;
+	struct s_lst	*next;
+}	t_lst;
+
+typedef struct s_shared_args
+{
+	t_lst	*global_queue;
+	t_lst	*tail;
+	t_lst	*dump;
+	int	flag;
+	pthread_mutex_t	queue_mutex;
+	pthread_mutex_t	dump_mutex;
+	pthread_mutex_t	flag_mutex;
+}	t_shared;
+
+typedef struct s_philo_struct
+{
+	int	philo_nbr;
+//	int	state;
+//	pthread_mutex_t	state_mutex;
+	t_shared	*shared_args;
+}	t_philo_struct;
+*/
+
+int	check_flag_equal_num(t_shared *shared_args, int num)
+{
+	pthread_mutex_lock(&shared_args->flag_mutex);
+	if (shared_args->flag == num)
+	{
+		pthread_mutex_unlock(&shared_args->flag_mutex);
+		return (1);
+	}
+	pthread_mutex_unlock(&shared_args->flag_mutex);
+	return (0);
+}
+
+void	enqueue(t_shared *shared_args)
+{
+	t_lst	*new_node;
+
+	pthread_mutex_lock(&shared_args->queue_mutex);
+	new_node = malloc(sizeof(t_list));
+	if (!new_node)
+	{
+		pthread_mutex_unlock(&shared_args->queue_mutex);
+		return ;
+	}
+	if (!shared_args->global_queue)
+		shared_args->global_queue = new_node;
+	else if (shared_args->tail)
+		shared_args->tail->next = new_node;
+	new_node->nbr = rand() % 100 + 1;
+	new_node->next = NULL;
+	shared_args->tail = new_node;
+	pthread_mutex_unlock(&shared_args->queue_mutex);
+}
+
+void	dump_whole_queue(t_shared *shared_args)
+{
+	t_lst	*temp;
+
+	temp = NULL;
+	pthread_mutex_lock(&shared_args->dump_mutex);
+	if (shared_args->global_queue == NULL)
+	{
+		pthread_mutex_unlock(&shared_args->dump_mutex);
+		return ;
+	}
+	if (shared_args->dump)
+		temp = shared_args->dump;
+	shared_args->dump = shared_args->global_queue;
+	if (shared_args->tail)
+		shared_args->tail->next = temp;
+	shared_args->global_queue = NULL;
+	shared_args->tail = NULL;
+	pthread_mutex_unlock(&shared_args->dump_mutex);
+}
+
+void	free_dump(t_shared *shared_args)
+{
+	t_lst	*temp;
+
+	pthread_mutex_lock(&shared_args->dump_mutex);
+	if (!shared_args->dump)
+	{
+		pthread_mutex_unlock(&shared_args->dump_mutex);
+		return ;
+	}
+	while (shared_args->dump)
+	{
+		temp = shared_args->dump->next;
+		free(shared_args->dump);
+		shared_args->dump = temp;
+	}
+	shared_args->dump = NULL;
+	pthread_mutex_unlock(&shared_args->dump_mutex);
+}
+
+void	free_global_queue(t_shared *shared_args)
+{
+	t_lst	*temp;
+
+	pthread_mutex_lock(&shared_args->queue_mutex);
+	if (shared_args->global_queue == NULL)
+	{
+		pthread_mutex_unlock(&shared_args->queue_mutex);
+		return ;
+	}
+	while (shared_args->global_queue)
+	{
+		temp = shared_args->global_queue->next;
+		free(shared_args->global_queue);
+		shared_args->global_queue = temp;
+	}
+	pthread_mutex_unlock(&shared_args->queue_mutex);
+}
+
+int	print_global_queue(t_shared *shared_args)
+{
+	t_lst	*temp;
+	int	flag;
+
+	flag = 0;
+	pthread_mutex_lock(&shared_args->queue_mutex);
+	temp = shared_args->global_queue;
+	while (temp)
+	{
+		printf("%ld philosopher %d \n", temp->nbr);
+		if (temp->nbr == 100)
+		{
+			printf("found nbr 100\n");
+//			while (temp)
+//			{
+//				printf("in the rest of global queue: %d\n", temp->nbr);
+//				temp = temp->next;
+//			}
+			dump_whole_queue(shared_args);
+			pthread_mutex_unlock(&shared_args->queue_mutex);
+			return (1);
+		}
+		temp = temp->next;
+	}
+	printf("end of global queue for now\n");
+	dump_whole_queue(shared_args);
+	pthread_mutex_unlock(&shared_args->queue_mutex);
+	return (0);
+}
+
+void	init_t_shared(t_shared *shared_args)
+{
+	shared_args->global_queue = NULL;
+	shared_args->tail = NULL;
+	shared_args->dump = NULL;
+	shared_args->flag = 0;
+	pthread_mutex_init(&shared_args->queue_mutex, NULL);
+	pthread_mutex_init(&shared_args->dump_mutex, NULL);
+	pthread_mutex_init(&shared_args->flag_mutex, NULL);
+}
+
+void	wait_sync_start(t_shared *shared_args)
+{
+	while (1)
+	{
+		pthread_mutex_lock(&shared_args->flag_mutex);
+		if (shared_args->flag == 1)
+		{
+			pthread_mutex_unlock(&shared_args->flag_mutex);
+			return ;
+		}
+		pthread_mutex_unlock(&shared_args->flag_mutex);
+	}
+}
+/*
+int	check_flag_to_terminate(t_shared *shared_args)
+{
+	pthread_mutex_lock(&shared_args->flag_mutex);
+	if (shared_args->flag == 2)
+	{
+		return (1);
+	}
+	pthread_mutex_unlock(&shared_args->flag_mutex);
+	return (0);
+}
+*/
+
+void	wait_philos_to_finish(t_philo_struct **philo_arr, t_shared *shared_args)
+{
+	int	count;
+	int	i;
+
+	while (1)
+	{
+		count = 0;
+		i = -1;
+		while (++i < PHILO_MAX)		
+		{
+			pthread_mutex_lock(&((*philo_arr)[i].state_mutex));
+			if ((*philo_arr)[i].state == 1)
+				count++;
+			pthread_mutex_unlock(&((*philo_arr)[i].state_mutex));
+		}
+		if (count == PHILO_MAX)
+		{
+			pthread_mutex_lock(&shared_args->flag_mutex);
+			//printf("setting flag to 3\n");
+			shared_args->flag = 3;
+			pthread_mutex_unlock(&shared_args->flag_mutex);
+			break ;
+		}
+	}
+}
+
+void	*print_routine(void *arg)
+{
+	t_philo_struct **philo_arr;
+	t_shared	*shared_args;
+
+	philo_arr = (t_philo_struct **)arg;
+	shared_args = (*philo_arr)->shared_args;
+	wait_sync_start(shared_args);
+	while (1)
+	{
+//		if (check_flag_to_terminate(shared_args) == 1)
+//			break ;
+		if (print_global_queue(shared_args) == 1)
+		{
+			pthread_mutex_lock(&shared_args->flag_mutex);
+			shared_args->flag = 2;
+			//printf("set flag to 2 in print routine\n");
+			pthread_mutex_unlock(&shared_args->flag_mutex);
+			//wait_philos_to_finish(philo_arr, shared_args);
+			break ;
+		}
+		usleep(500);
+	}
+	return (NULL);
+}
+
+void	*free_routine(void *arg)
+{
+	t_shared	*shared_args;
+
+	shared_args = (t_shared *)arg;
+	wait_sync_start(shared_args);
+	while (1)
+	{
+		//if (check_if_flag_equal_num(shared_args, 3) == 1)
+		if (check_if_flag_equal_num(shared_args, 2) == 1)
+		{
+//			pthread_mutex_lock(&shared_args->queue_mutex);
+//			t_lst *temp = shared_args->global_queue;
+//			while (temp)
+//			{
+//				printf("freeing global queue: %d\n", temp->nbr);
+//				temp = temp->next;
+//			}
+//			pthread_mutex_unlock(&shared_args->queue_mutex);
+//			pthread_mutex_lock(&shared_args->dump_mutex);
+//			temp = shared_args->dump;
+//			while (temp)
+//			{
+//				printf("freeing dump: %d\n", temp->nbr);
+//				temp = temp->next;
+//			}
+//			pthread_mutex_unlock(&shared_args->dump_mutex);
+//			free_dump(shared_args);
+//			free_global_queue(shared_args);
+//			pthread_mutex_lock(&shared_args->flag_mutex);
+//			printf("breaking out of freeing routine\n");
+//			pthread_mutex_unlock(&shared_args->flag_mutex);
+			break ;
+		}
+		free_dump(shared_args);
+		//usleep(10000);
+	}
+	return (NULL);
+}
+
+void	*philo_routine(void *arg)
+{
+	t_philo_struct	*philo;
+	t_shared	*shared_args;
+
+	philo = (t_philo_struct *)arg;
+	shared_args = philo->shared_args;
+	wait_sync_start(shared_args);
+	while (1)
+	{
+		if (check_if_flag_equal_num(shared_args, 2) == 1)
+		{
+//			pthread_mutex_lock(&philo->state_mutex);
+//			philo->state = 1;
+//			pthread_mutex_unlock(&philo->state_mutex);
+//			pthread_mutex_lock(&shared_args->flag_mutex);
+//			printf("breaking out of philo_routine\n");
+//			pthread_mutex_unlock(&shared_args->flag_mutex);
+//			pthread_mutex_lock(&shared_args->queue_mutex);
+//			while (shared_args->global_queue)
+//			{
+//				temp = shared_args->global_queue->next;
+//				free(shared_args->global_queue);
+//				shared_args->global_queue = temp;
+//			}
+//			shared_args->global_queue = NULL;
+//			pthread_mutex_unlock(&shared_args->queue_mutex);
+//			t_lst *temp;
+//			if (shared_args->global_queue)
+//			{
+//				while (shared_args->global_queue)
+//				{
+//					temp = shared_args->global_queue->next;
+//					free(shared_args->global_queue);
+//					shared_args->global_queue = temp;
+//				}
+//				shared_args->global_queue = NULL;
+//			}
+			break ;
+		}
+//		else
+//		{
+//			pthread_mutex_lock(&shared_args->flag_mutex);
+//			write(2, "abcabcabc\n",	10);
+//			pthread_mutex_unlock(&shared_args->flag_mutex);
+//		}
+		//pthread_mutex_lock(&shared_args->queue_mutex);
+//		pthread_mutex_lock(&shared_args->flag_mutex);
+//		printf("before enqueue in philo routine\n");
+//		pthread_mutex_unlock(&shared_args->flag_mutex);
+		enqueue(shared_args);
+//		pthread_mutex_lock(&shared_args->flag_mutex);
+//		printf("after enqueue in philo routine\n");
+//		pthread_mutex_unlock(&shared_args->flag_mutex);
+		//pthread_mutex_unlock(&shared_args->queue_mutex);
+	}
+	return (NULL);
+}
+
+t_philo_struct	*init_t_philo_arr(t_shared *shared_args)
+{
+	t_philo_struct *philo_arr = malloc(sizeof(t_philo_struct) * PHILO_MAX);
+	int	i = -1;
+	
+	if (!philo_arr)
+		return (NULL);
+	while (++i < PHILO_MAX)
+	{
+		philo_arr[i].philo_nbr = i + 1;
+		philo_arr[i].state = 0;
+		philo_arr[i].shared_args = shared_args;
+		pthread_mutex_init(&philo_arr[i].state_mutex, NULL);
+	}
+	return (philo_arr);
+}
+
+int	main(void)
+{
+	int	i = 1;
+	pthread_t *thread_arr = malloc(sizeof(pthread_t) * (PHILO_MAX + 2));
+	t_shared	shared_args;
+	srand(time(NULL));
+	init_t_shared(&shared_args);
+	t_philo_struct *philo_arr = init_t_philo_arr(&shared_args);
+	pthread_create(&thread_arr[0], NULL, &print_routine, &philo_arr);
+	pthread_create(&thread_arr[1], NULL, &free_routine, &shared_args);
+	while (++i < PHILO_MAX + 2)
+		pthread_create(&thread_arr[i], NULL, &philo_routine,
+			&philo_arr[i - 2]);
+	pthread_mutex_lock(&shared_args.flag_mutex);
+	shared_args.flag = 1;
+	pthread_mutex_unlock(&shared_args.flag_mutex);
+	i = -1;
+	while (++i < PHILO_MAX + 2)
+		pthread_join(thread_arr[i], NULL);
+	t_lst *temp;
+	while (shared_args.global_queue)
+	{
+		temp = shared_args.global_queue->next;
+		free(shared_args.global_queue);
+		shared_args.global_queue = temp;
+	}
+	shared_args.global_queue = NULL;
+	while (shared_args.dump)
+	{
+		temp = shared_args.dump->next;
+		free(shared_args.dump);
+		shared_args.dump = temp;
+	}
+	shared_args.dump = NULL;
+	i = -1;
+	while (++i < PHILO_MAX)
+		pthread_mutex_destroy(&philo_arr[i].state_mutex);
+	pthread_mutex_destroy(&shared_args.queue_mutex);
+	pthread_mutex_destroy(&shared_args.dump_mutex);
+	free(thread_arr);
+	free(philo_arr);
+}

@@ -1,0 +1,5 @@
+my create new node function was not threadsafe, each function was trying to call
+malloc without any mutexes to synchronize it. approach was flawed and i should go
+back to my initial plan to have a giant message queue data structure that all philo
+threads will push a node on it. our printing thread will then keep printing/
+popping nodes off the queue.
