@@ -36,8 +36,6 @@
 *.x86_64
 *.hex
 
-philo
-
 # Debug files
 *.dSYM/
 *.su
