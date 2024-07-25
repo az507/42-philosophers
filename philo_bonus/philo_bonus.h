@@ -6,7 +6,7 @@
 /*   By: achak <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/23 20:04:24 by achak             #+#    #+#             */
-/*   Updated: 2024/07/25 16:54:17 by achak            ###   ########.fr       */
+/*   Updated: 2024/07/25 19:32:47 by achak            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,7 +41,7 @@ typedef struct s_params
 	int		eat_max;
 	int		philo_id;
 	long	start_time;
-	bool	track_times_eaten;
+	//bool	track_eat_count;
 	pid_t	*pids;
 	sem_t	*sem_forks;
 	sem_t	*sem_lock;

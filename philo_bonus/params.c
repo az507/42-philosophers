@@ -6,7 +6,7 @@
 /*   By: achak <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/24 12:52:31 by achak             #+#    #+#             */
-/*   Updated: 2024/07/25 16:59:04 by achak            ###   ########.fr       */
+/*   Updated: 2024/07/25 19:52:31 by achak            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,11 +21,11 @@ static void	philo_info_init(t_params *params, int argc, char *argv[])
 	params->time_die = ft_atoi(argv[2]) * MS_TO_MICROSEC;
 	params->time_eat = ft_atoi(argv[3]) * MS_TO_MICROSEC;
 	params->time_sleep = ft_atoi(argv[4]) * MS_TO_MICROSEC;
-	params->track_times_eaten = false;
+	//params->track_times_eaten = false;
 	if (argc > 5)
 	{
 		params->eat_max = ft_atoi(argv[5]);
-		params->track_times_eaten = true;
+		//params->track_times_eaten = true;
 	}
 	if (params->philo_max <= 0 || params->time_die <= 0
 		|| params->time_eat <= 0 || params->philo_max <= 0
@@ -41,18 +41,19 @@ t_params	*params_create(int argc, char *argv[])
 		ft_error(NULL, "Too few arguments");
 	params = ft_malloc(sizeof(t_params));
 	if (!params)
-		ft_error(NULL, "params struct malloc() in params create");
+		ft_error(NULL, "params struct malloc-params create");
 	philo_info_init(params, argc, argv);
 	params->pids = ft_malloc(sizeof(pid_t) * (params->philo_max + 1));
 	if (!params->pids)
-		ft_error(params, "pids arr malloc() in params create");
-	params->sem_forks = sem_open(SEM_FORKS, O_CREAT | O_EXCL,
+		ft_error(params, "pids arr malloc-params create");
+	params->sem_forks = sem_open(SEM_FORKS, O_CREAT | O_EXCL | O_RDWR,
 			S_IRUSR | S_IWUSR, params->philo_max);
-	param->sem_lock = sem_open(SEM_LOCK, O_CREAT | O_EXCL,
+	params->sem_lock = sem_open(SEM_LOCK, O_CREAT | O_EXCL | O_RDWR,
 			S_IRUSR | S_IWUSR, 1);
 	if (params->sem_forks == SEM_FAILED || params->sem_lock == SEM_FAILED)
-		ft_error(params, "sem_open() in params create");
+		ft_error(params, "sem_open-params create");
 	sem_close(params->sem_forks);
+	sem_close(params->sem_lock);
 	params->sem_forks = NULL;
 	return (params);
 }
@@ -63,12 +64,18 @@ void	params_destroy(t_params *params)
 	{
 		if (params->pids)
 			free(params->pids);
-		if (params->sem_forks != SEM_FAILED
-			&& sem_close(params->sem_forks) == -1)
-			ft_putendl_fd("sem_close() in params destroy", STDERR_FILENO);
-		if (params->sem_lock != SEM_FAILED
-			&& sem_close(params->sem_lock) == -1)
-			ft_putendl_fd("sem_close() in params destroy", STDERR_FILENO);
+		if (params->sem_forks != SEM_FAILED && params->sem_forks)
+		{
+			if (sem_close(params->sem_forks) == -1)
+				ft_putendl_fd("sem_close-params destroy",
+					STDERR_FILENO);
+		}
+		if (params->sem_lock != SEM_FAILED && params->sem_lock)
+		{
+			if (sem_close(params->sem_lock) == -1)
+				ft_putendl_fd("sem_close-params destroy",
+					STDERR_FILENO);
+		}
 		free(params);
 	}
 }

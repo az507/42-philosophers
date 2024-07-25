@@ -6,7 +6,7 @@
 /*   By: achak <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/23 20:12:13 by achak             #+#    #+#             */
-/*   Updated: 2024/07/25 17:02:11 by achak            ###   ########.fr       */
+/*   Updated: 2024/07/25 20:04:20 by achak            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,11 +23,52 @@ void	processes_cleanup(t_params *params)
 	while (i <= params->philo_max && params->pids[i] > 0)
 	{
 		if (kill(params->pids[i], SIGKILL) == -1)
-			ft_putendl_fd("kill() in processes cleanup", STDERR_FILENO);
+			ft_putendl_fd("kill-processes_cleanup", STDERR_FILENO);
 		if (waitpid(params->pids[i], NULL, 0) == -1)
-			ft_putendl_fd("waitpid() in processes cleanup", STDERR_FILENO);
+			ft_putendl_fd("waitpid-processes_cleanup", STDERR_FILENO);
 		i++;
 	}
+}
+
+void	*helper_routine(void *arg)
+{
+	t_params	*params;
+	//int		wstatus;
+	int		nbr_philos_done;
+
+	// Maybe need to call sem_open for sem_lock in helper thread, to resolve
+	// drd/helgrind semaphore error.
+	params = (t_params *)arg;
+	nbr_philos_done = 0;
+	sem_wait(params->sem_lock);
+	while (true)
+	{
+//		wstatus = 0;
+//		if (waitpid(params->pids[0], &wstatus, WUNTRACED) == -1)
+//			ft_putendl_fd("waitpid-helper_routine", STDERR_FILENO);
+//		sem_wait(params->sem_lock);
+//		if (WIFSTOPPED(wstatus))
+//		{
+//			if (++nbr_philos_done == params->philo_max)
+//				return (processes_cleanup(params),
+//					printf("%ld all philos are done eating\n",
+//					get_time_ms(params->start_time)), NULL);
+//			kill(params->pids[0], SIGCONT);
+//		}
+//		else if (WIFSIGNALED(wstatus))
+//			return (NULL);
+//		sem_post(params->sem_lock);
+		if (sem_wait(params->sem_lock) == -1)
+			perror("\tsem_wait");
+		if (++nbr_philos_done == params->philo_max)
+		{
+			processes_cleanup(params);
+			printf("%ld all philos are done eating\n",
+				get_time_ms(params->start_time));
+			return (NULL);
+		}
+	}
+	return (NULL);
 }
 
 int	main(int argc, char *argv[])
@@ -35,13 +76,15 @@ int	main(int argc, char *argv[])
 	int		i;
 	t_params	*params;
 
+	//printf("--->%d\n", SEM_VALUE_MAX);
 	sem_unlink(SEM_FORKS);
+	sem_unlink(SEM_LOCK);
 	i = 0;
 	params = params_create(argc, argv);
 	params->pids[0] = fork();
 	if (params->pids[0] == -1)
 		return (processes_cleanup(params),
-			ft_error(params, "fork() in main"), 1);
+			ft_error(params, "fork-main"), 1);
 	if (!params->pids[0])
 	{
 		params_destroy(params);
@@ -54,7 +97,7 @@ int	main(int argc, char *argv[])
 		params->pids[i] = fork();
 		if (params->pids[i] == -1)
 			return (processes_cleanup(params),
-				ft_error(params, "fork() in main"), 1);
+				ft_error(params, "fork-main"), 1);
 		if (!params->pids[i])
 			philo_routine(params);
 		kill(params->pids[i], SIGSTOP);
@@ -64,49 +107,42 @@ int	main(int argc, char *argv[])
 	struct timeval	tv;
 
 	if (gettimeofday(&tv, NULL) == -1)
-		ft_putendl_fd("gettimeofday() in main", STDERR_FILENO);
+		ft_putendl_fd("gettimeofday-main", STDERR_FILENO);
 	params->start_time = tv.tv_sec;
 
-	pid_t	pid;
+	pthread_t	tid;
+
+	if (pthread_create(&tid, NULL, &helper_routine, params) != 0)
+		return (processes_cleanup(params),
+			ft_error(params, "pthread_create-main"), 1);
+
 	int	wstatus;
-	int	nbr_philos_done_eating = 0;
 	bool	break_flag = false;
 	while (true)
 	{
-		i = -1;
+		i = 0;
 		while (++i <= params->philo_max)
 		{
 			wstatus = 0;
-			pid = waitpid(params->pids[i], &wstatus, WNOHANG | WUNTRACED);
-			if (!pid)
+			if (!waitpid(params->pids[i], &wstatus, WNOHANG))
 				continue ;
-			else if (pid == (pid_t)-1)
-				ft_putendl_fd("waitpid() in main loop", STDERR_FILENO);
 			if (WIFEXITED(wstatus))
 			{
 				processes_cleanup(params);
-				printf("%ld philosopher %d died\n",
-					get_time_ms(params->start_time), i + 1);
-				break_flag = true;
-				break ;
+				printf("%ld philosopher %d died",
+					get_time_ms(params->start_time), i);
 			}
-			else if (WIFSTOPPED(wstatus))
-			{
-				if (++nbr_philos_done_eating == params->philo_max)
-				{
-					processes_cleanup(params);
-					printf("%ld all philosophers are done eating\n",
-						get_time_ms(params->start_time));
-					break_flag = true;
-					break ; // print all philos done eating msg
-				}
-				kill(params->pids[0], SIGCONT);
-			}
+			else if (!WIFSIGNALED(wstatus))
+				continue ;
+			break_flag = true;
+			break ;
 		}
 		if (break_flag)
 			break ;
 	}
+	if (pthread_join(tid, NULL) != 0)
+		ft_putendl_fd("pthread_join-main", STDERR_FILENO);
 	params_destroy(params);
-	if (sem_unlink(SEM_FORKS) == -1)
-		ft_error(params, "sem_unlink() in main");
+	sem_unlink(SEM_FORKS);
+	sem_unlink(SEM_LOCK);
 }
