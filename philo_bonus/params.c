@@ -6,7 +6,7 @@
 /*   By: achak <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/24 12:52:31 by achak             #+#    #+#             */
-/*   Updated: 2024/07/25 13:46:13 by achak            ###   ########.fr       */
+/*   Updated: 2024/07/25 16:59:04 by achak            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,11 +45,15 @@ t_params	*params_create(int argc, char *argv[])
 	philo_info_init(params, argc, argv);
 	params->pids = ft_malloc(sizeof(pid_t) * (params->philo_max + 1));
 	if (!params->pids)
-		ft_error(params, "pids arr malloc() error in params create");
-	params->sem_forks = sem_open(SEM_NAME, O_CREAT, S_IRUSR | S_IWUSR
-			| S_IRGRP | S_IWGRP, params->philo_max);
-	if (params->sem_forks == SEM_FAILED)
-		ft_error(params, "sem_open() error in params create");
+		ft_error(params, "pids arr malloc() in params create");
+	params->sem_forks = sem_open(SEM_FORKS, O_CREAT | O_EXCL,
+			S_IRUSR | S_IWUSR, params->philo_max);
+	param->sem_lock = sem_open(SEM_LOCK, O_CREAT | O_EXCL,
+			S_IRUSR | S_IWUSR, 1);
+	if (params->sem_forks == SEM_FAILED || params->sem_lock == SEM_FAILED)
+		ft_error(params, "sem_open() in params create");
+	sem_close(params->sem_forks);
+	params->sem_forks = NULL;
 	return (params);
 }
 
@@ -58,17 +62,13 @@ void	params_destroy(t_params *params)
 	if (params)
 	{
 		if (params->pids)
-		{
 			free(params->pids);
-			params->pids = NULL;
-		}
-		if (params->sem_forks)
-		{
-			if (sem_close(params->sem_forks) == -1)
-				ft_putendl_fd("sem_close() error in params destroy",
-					STDERR_FILENO);
-			params->sem_forks = NULL;
-		}
+		if (params->sem_forks != SEM_FAILED
+			&& sem_close(params->sem_forks) == -1)
+			ft_putendl_fd("sem_close() in params destroy", STDERR_FILENO);
+		if (params->sem_lock != SEM_FAILED
+			&& sem_close(params->sem_lock) == -1)
+			ft_putendl_fd("sem_close() in params destroy", STDERR_FILENO);
 		free(params);
 	}
 }

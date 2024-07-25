@@ -6,7 +6,7 @@
 /*   By: achak <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/24 17:06:07 by achak             #+#    #+#             */
-/*   Updated: 2024/07/25 13:47:59 by achak            ###   ########.fr       */
+/*   Updated: 2024/07/25 17:02:11 by achak            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,18 +51,23 @@ void	philo_routine(t_params *params)
 	struct timeval	tv;
 	int	times_ate;
 
+	params->sem_forks = sem_open(SEM_FORKS, O_WRONLY);
+	if (params->sem_forks == SEM_FAILED)
+		ft_putendl_fd("sem_open() in philo routine", STDERR_FILENO);
 	times_ate = 0;
 	if (gettimeofday(&tv, NULL) == -1)
-		ft_putendl_fd("gettimeofday() error in philo_routine", STDERR_FILENO);
+		ft_putendl_fd("gettimeofday() in philo_routine", STDERR_FILENO);
 	params->start_time = tv.tv_sec;
 	if (params->philo_id % 2 == 0)
-		usleep(params->time_sleep);
-		//philo_sleep(params);
+		philo_sleep(params);
 	while (true)
 	{
 		philo_eat(params);
-		if (params->track_times_eaten && ++times_ate == params->eat_max)
-			kill(0, SIGCONT);
+		if (++times_ate == params->eat_max)
+		{
+			int res = kill(params->pids[0], SIGSTOP);
+			printf("=========================================================================        res = %d\n", res);
+		}
 		philo_sleep(params);
 		philo_think(params);
 	}

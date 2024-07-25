@@ -6,7 +6,7 @@
 /*   By: achak <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/23 20:04:24 by achak             #+#    #+#             */
-/*   Updated: 2024/07/25 13:45:09 by achak            ###   ########.fr       */
+/*   Updated: 2024/07/25 16:54:17 by achak            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,7 +29,8 @@
 
 # define MS_TO_MICROSEC 1000
 # define SECS_TO_MS 1000
-# define SEM_NAME "forks"
+# define SEM_FORKS "forks"
+# define SEM_LOCK "lock"
 
 typedef struct s_params
 {
@@ -43,6 +44,7 @@ typedef struct s_params
 	bool	track_times_eaten;
 	pid_t	*pids;
 	sem_t	*sem_forks;
+	sem_t	*sem_lock;
 }	t_params;
 
 void	params_destroy(t_params *params);

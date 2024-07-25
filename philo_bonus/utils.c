@@ -6,7 +6,7 @@
 /*   By: achak <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/24 12:54:50 by achak             #+#    #+#             */
-/*   Updated: 2024/07/25 13:48:25 by achak            ###   ########.fr       */
+/*   Updated: 2024/07/25 16:04:50 by achak            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,6 +62,6 @@ long	get_time_ms(long start_time)
 	struct timeval	tv;
 
 	if (gettimeofday(&tv, NULL) == -1)
-		ft_putendl_fd("gettimeofday() error in get_time_ms", STDERR_FILENO);
+		ft_putendl_fd("gettimeofday() in get_time_ms", STDERR_FILENO);
 	return ((tv.tv_sec - start_time) * SECS_TO_MS);
 }
