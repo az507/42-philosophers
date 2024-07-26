@@ -6,7 +6,7 @@
 /*   By: achak <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/24 12:52:31 by achak             #+#    #+#             */
-/*   Updated: 2024/07/25 19:52:31 by achak            ###   ########.fr       */
+/*   Updated: 2024/07/26 18:30:40 by achak            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,15 +46,12 @@ t_params	*params_create(int argc, char *argv[])
 	params->pids = ft_malloc(sizeof(pid_t) * (params->philo_max + 1));
 	if (!params->pids)
 		ft_error(params, "pids arr malloc-params create");
-	params->sem_forks = sem_open(SEM_FORKS, O_CREAT | O_EXCL | O_RDWR,
-			S_IRUSR | S_IWUSR, params->philo_max);
-	params->sem_lock = sem_open(SEM_LOCK, O_CREAT | O_EXCL | O_RDWR,
-			S_IRUSR | S_IWUSR, 1);
-	if (params->sem_forks == SEM_FAILED || params->sem_lock == SEM_FAILED)
-		ft_error(params, "sem_open-params create");
-	sem_close(params->sem_forks);
-	sem_close(params->sem_lock);
-	params->sem_forks = NULL;
+//	if (sem_close(params->sem_forks) == -1)
+//		perror("sem_close-params_create");
+//	if (sem_close(params->sem_lock) == -1)
+//		perror("sem_close-params_create");
+//	params->sem_forks = NULL;
+//	params->sem_lock = NULL;
 	return (params);
 }
 

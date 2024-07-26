@@ -6,7 +6,7 @@
 /*   By: achak <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/23 20:04:24 by achak             #+#    #+#             */
-/*   Updated: 2024/07/25 19:32:47 by achak            ###   ########.fr       */
+/*   Updated: 2024/07/26 18:52:56 by achak            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,6 +31,7 @@
 # define SECS_TO_MS 1000
 # define SEM_FORKS "forks"
 # define SEM_LOCK "lock"
+# define SEM_PRINT "print"
 
 typedef struct s_params
 {
@@ -45,6 +46,7 @@ typedef struct s_params
 	pid_t	*pids;
 	sem_t	*sem_forks;
 	sem_t	*sem_lock;
+	sem_t	*sem_print;
 }	t_params;
 
 void	params_destroy(t_params *params);

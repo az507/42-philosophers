@@ -6,7 +6,7 @@
 /*   By: achak <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/23 20:12:13 by achak             #+#    #+#             */
-/*   Updated: 2024/07/25 20:04:20 by achak            ###   ########.fr       */
+/*   Updated: 2024/07/26 19:47:30 by achak            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,7 +40,11 @@ void	*helper_routine(void *arg)
 	// drd/helgrind semaphore error.
 	params = (t_params *)arg;
 	nbr_philos_done = 0;
-	sem_wait(params->sem_lock);
+//	params->sem_lock = sem_open(SEM_LOCK, 0);
+//	if (params->sem_lock == SEM_FAILED)
+//		perror("sem_open-helper_routine");
+	if (sem_wait(params->sem_lock) == -1)
+		perror("\tsem_wait-helper_routine");
 	while (true)
 	{
 //		wstatus = 0;
@@ -63,8 +67,12 @@ void	*helper_routine(void *arg)
 		if (++nbr_philos_done == params->philo_max)
 		{
 			processes_cleanup(params);
+			if (sem_wait(params->sem_print) == -1)
+				perror("sem_wait-helper_routine");
 			printf("%ld all philos are done eating\n",
 				get_time_ms(params->start_time));
+			if (sem_post(params->sem_print) == -1)
+				perror("sem_post-helper_routine");
 			return (NULL);
 		}
 	}
@@ -79,6 +87,7 @@ int	main(int argc, char *argv[])
 	//printf("--->%d\n", SEM_VALUE_MAX);
 	sem_unlink(SEM_FORKS);
 	sem_unlink(SEM_LOCK);
+	sem_unlink(SEM_PRINT);
 	i = 0;
 	params = params_create(argc, argv);
 	params->pids[0] = fork();
@@ -102,7 +111,17 @@ int	main(int argc, char *argv[])
 			philo_routine(params);
 		kill(params->pids[i], SIGSTOP);
 	}
-	kill(0, SIGCONT);
+	params->sem_forks = sem_open(SEM_FORKS, O_CREAT,
+			S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP, params->philo_max);
+	params->sem_lock = sem_open(SEM_LOCK, O_CREAT,
+			S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP, 1);
+	params->sem_print = sem_open(SEM_PRINT, O_CREAT,
+			S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP, 1);
+	if (params->sem_forks == SEM_FAILED || params->sem_lock == SEM_FAILED
+		|| params->sem_print == SEM_FAILED)
+		ft_error(params, "sem_open-params create");
+//	sem_close(params->sem_forks);
+//	params->sem_forks = NULL;
 
 	struct timeval	tv;
 
@@ -115,6 +134,10 @@ int	main(int argc, char *argv[])
 	if (pthread_create(&tid, NULL, &helper_routine, params) != 0)
 		return (processes_cleanup(params),
 			ft_error(params, "pthread_create-main"), 1);
+
+	kill(0, SIGCONT);
+//	sem_close(params->sem_lock);
+//	params->sem_lock = NULL;
 
 	int	wstatus;
 	bool	break_flag = false;
@@ -129,8 +152,12 @@ int	main(int argc, char *argv[])
 			if (WIFEXITED(wstatus))
 			{
 				processes_cleanup(params);
+				if (sem_wait(params->sem_print) == -1)
+					perror("sem_wait-helper_routine");
 				printf("%ld philosopher %d died",
 					get_time_ms(params->start_time), i);
+				if (sem_post(params->sem_print) == -1)
+					perror("sem_post-helper_routine");
 			}
 			else if (!WIFSIGNALED(wstatus))
 				continue ;
@@ -142,7 +169,10 @@ int	main(int argc, char *argv[])
 	}
 	if (pthread_join(tid, NULL) != 0)
 		ft_putendl_fd("pthread_join-main", STDERR_FILENO);
+	if (sem_close(params->sem_print) == -1)
+		perror("sem_close-main");
 	params_destroy(params);
 	sem_unlink(SEM_FORKS);
 	sem_unlink(SEM_LOCK);
+	sem_unlink(SEM_PRINT);
 }
