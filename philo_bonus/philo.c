@@ -6,91 +6,90 @@
 /*   By: achak <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/24 17:06:07 by achak             #+#    #+#             */
-/*   Updated: 2024/07/26 19:01:16 by achak            ###   ########.fr       */
+/*   Updated: 2024/07/27 17:05:53 by achak            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "philo_bonus.h"
 
-static void	philo_eat(t_params *params, sem_t *sem_forks, sem_t *sem_print)
+void	sem_printf(t_philo *philo, const char *str)
+{
+	if (sem_wait(philo->sem_print) == -1)
+		ft_putendl_fd("sem_wait-sem_printf");
+	printf("%ld philosopher %d %s\n", get_time_ms(philo->start_time),
+		philo->philo_id, str);
+	if (sem_post(philo->sem_print) == -1)
+		ft_putendl_fd("sem_post-sem_printf");
+}
+
+void	sem_perror(sem_t *sem_print, const char *error)
+{
+	sem_wait(sem_print);
+	ft_putendl_fd(error, STDERR_FILENO);
+	sem_post(sem_print);
+}
+
+static void	philo_eat(t_philo *philo, sem_t *sem_forks, sem_t *sem_print)
 {
 	if (sem_wait(sem_forks) == -1)
-		ft_putendl_fd("sem_wait-philo_eat", STDERR_FILENO);
-	if (sem_wait(sem_print) == -1)
-		perror("sem_wait-philo_eat");
-	printf("%ld philosopher %d has taken a fork\n",
-		get_time_ms(params->start_time), params->philo_id);
-	if (sem_post(sem_print) == -1)
-		perror("sem_post-philo_eat");
-	if (sem_wait(sem_forks) == -1)
-		ft_putendl_fd("sem_wait-philo_eat", STDERR_FILENO);
-	if (sem_wait(sem_print) == -1)
-		perror("sem_wait-philo_eat");
-	printf("%ld philosopher %d has taken a fork\n",
-		get_time_ms(params->start_time), params->philo_id);
-	printf("%ld philosopher %d is eating\n",
-		get_time_ms(params->start_time), params->philo_id);
-	if (sem_post(sem_print) == -1)
-		perror("sem_post-philo_eat");
-	if (usleep(params->time_eat) == -1)
+		sem_perror(philo, "sem_wait-philo_eat");
+	sem_printf(philo, TAKE_FORK);
+	sem_printf(philo, TAKE_FORK);
+	sem_printf(philo, EAT);
+	if (usleep(philo->time_eat) == -1)
 		ft_putendl_fd("usleep-philo_eat", STDERR_FILENO);
 	if (sem_post(sem_forks) == -1)
 		ft_putendl_fd("sem_post-philo_eat", STDERR_FILENO);
-	if (sem_post(sem_forks) == -1)
-		ft_putendl_fd("sem_post-philo_eat", STDERR_FILENO);
 }
 
-static void	philo_sleep(t_params *params, sem_t *sem_print)
+static void	philo_sleep(t_philo *philo, sem_t *sem_print)
 {
-	if (sem_wait(sem_print) == -1)
-		perror("sem_wait-philo_sleep");
-	printf("%ld philosopher %d is sleeping\n",
-		get_time_ms(params->start_time), params->philo_id);
-	if (sem_post(sem_print) == -1)
-		perror("sem_post-philo_sleep");
-	if (usleep(params->time_sleep) == -1)
+	sem_printf(philo, SLEEP);
+	if (usleep(philo->time_sleep) == -1)
 		ft_putendl_fd("usleep-philo_sleep", STDERR_FILENO);
 }
 
-static void	philo_think(t_params *params, sem_t *sem_print)
+static void	philo_think(t_philo *philo)
 {
-	if (sem_wait(sem_print) == -1)
-		perror("sem_wait-philo_sleep");
-	printf("%ld philosopher %d is thinking\n",
-		get_time_ms(params->start_time), params->philo_id);
-	if (sem_post(sem_print) == -1)
-		perror("sem_post-philo_sleep");
+	sem_printf(philo, THINK);
 }
 
-void	philo_routine(t_params *params)
+void	philo_track(t_philo *philo)
 {
-	int	times_ate;
-	struct timeval	tv;
-	sem_t	*sems[3];
+	if (++(philo->times_ate) == philo->info.eat_max)
+	{
+		if (sem_wait(philo->sem_plock) == -1)
+			ft_putendl_fd("sem_wait-philo_track", STDERR_FILENO);
+		if (sem_post(philo->sem_count) == -1)
+			ft_putendl_fd("sem_post-philo_track", STDERR_FILENO);
+	}
+}
 
-	times_ate = 0;
-	sems[0] = sem_open(SEM_FORKS, 0);
-	sems[1] = sem_open(SEM_LOCK, 0);
-	sems[2] = sem_open(SEM_PRINT, 0);
-	if (sems[0] == SEM_FAILED || sems[1] == SEM_FAILED || sems[2] == SEM_FAILED)
-		perror("sem_open-philo_routine");
-		//ft_putendl_fd("sem_open-philo_routine", STDERR_FILENO);
-	if (gettimeofday(&tv, NULL) == -1)
+void	philo_setup(t_philo *philo, pid_t **pids)
+{
+	philo->sem_forks = sem_open(SEM_FORKS, 0);
+	philo->sem_print = sem_open(SEM_PRINT, 0);
+	if (philo->sem_forks == SEM_FAILED || philo->sem_print == SEM_FAILED)
+		ft_putendl_fd("sem_open-philo_routine", STDERR_FILENO);
+	if (gettimeofday(&philo->start_tv, NULL) == -1)
 		ft_putendl_fd("gettimeofday-philo_routine", STDERR_FILENO);
-	params->start_time = tv.tv_sec;
-	if (params->philo_id % 2 == 0)
-		philo_sleep(params, sems[2]);
+	if (philo->setup_fptr)
+		(*philo->setup_fptr)(philo, PHILO);
+	free(*pids);
+	*pids = NULL;
+}
+
+void	philo_routine(t_philo *philo, pid_t *pids)
+{
+	philo_setup(philo, &pids);
+//	if (philo->philo_id % 2 == 0)
+//		philo_sleep(philo, sems[2]);
 	while (true)
 	{
-		philo_eat(params, sems[0], sems[2]);
-		if (++times_ate == params->eat_max)
-		{
-//			sem_wait(params->sem_lock);
-//			kill(params->pids[0], SIGSTOP);
-			if (sem_post(sems[1]) == -1)
-				perror("\tsem_post--philo_routine");
-		}
-		philo_sleep(params, sems[2]);
-		philo_think(params, sems[2]);
+		philo_eat(philo, sems[0], sems[2]);
+		if (philo->tracking_fptr)
+			(*philo->tracking_fptr)(philo);
+		philo_sleep(philo, sems[2]);
+		philo_think(philo, sems[2]);
 	}
 }
