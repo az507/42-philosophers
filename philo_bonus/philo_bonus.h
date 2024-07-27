@@ -6,7 +6,7 @@
 /*   By: achak <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/23 20:04:24 by achak             #+#    #+#             */
-/*   Updated: 2024/07/27 17:31:33 by achak            ###   ########.fr       */
+/*   Updated: 2024/07/27 18:01:09 by achak            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,16 +48,8 @@ typedef struct s_info
 	int	time_eat;
 	int	time_sleep;
 	int	eat_max;
+	bool	track_philo_quotas;
 }	t_info;
-
-typedef struct s_addon
-{
-	pthread_t (*setup_fptr)(struct *s_addon, int ptype);
-	void	(*philo_track)(struct *s_addon);
-	sem_t	*sem_count;
-	sem_t	*sem_plock;
-	int	times_ate;
-}	t_addon;
 
 typedef struct s_params
 {
@@ -68,15 +60,9 @@ typedef struct s_params
 	struct timeval	start_tv;
 	sem_t	*sem_forks;
 	sem_t	*sem_print;
-	t_addon	*addon;
+	sem_t	*sem_count;
+	sem_t	*sem_plock;
 }	t_params;
-
-typedef struct s_helper
-{
-	t_params	*philo;
-	sem_t	*sem_tlock;
-	bool	term_cond;
-}	t_helper;
 
 void	sem_printf(t_params *params, const char *str);
 

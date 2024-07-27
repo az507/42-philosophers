@@ -6,11 +6,14 @@
 /*   By: achak <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/23 20:12:13 by achak             #+#    #+#             */
-/*   Updated: 2024/07/27 17:01:10 by achak            ###   ########.fr       */
+/*   Updated: 2024/07/27 19:01:40 by achak            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "philo_bonus.h"
+
+t_params	*params_create(int argc, char *argv[]);
+void		params_routine(t_params *params);
 
 void	sems_unlink(void)
 {
@@ -21,9 +24,6 @@ void	sems_unlink(void)
 	sem_unlink(SEM_TLOCK);
 }
 
-t_params	*params_create(int argc, char *argv[]);
-void		params_routine(t_params *params);
-
 void	paramss_cleanup(t_params *params)
 {
 	int	i;
@@ -32,9 +32,9 @@ void	paramss_cleanup(t_params *params)
 	while (i <= params->params_max && params->pids[i] > 0)
 	{
 		if (kill(params->pids[i], SIGKILL) == -1)
-			ft_putendl_fd("kill-paramss_cleanup", STDERR_FILENO);
+			ft_putendl_fd("kill-philos_cleanup", STDERR_FILENO);
 		if (waitpid(params->pids[i], NULL, 0) == -1)
-			ft_putendl_fd("waitpid-paramss_cleanup", STDERR_FILENO);
+			ft_putendl_fd("waitpid-philos_cleanup", STDERR_FILENO);
 		i++;
 	}
 }
@@ -57,10 +57,6 @@ void	monitor_philos_status(t_params *params)
 				paramss_cleanup(params);
 				params->params_id = i + 1;
 				sem_printf(params, DEAD);
-//				sem_wait(params->tlock);
-//				term_cond = true;
-//				sem_post(params->tlock);
-//				sem_post(params->plock);
 			}
 			else if (WIFSIGNALED(wstatus))
 				printf("%ld all paramss are done eating\n",
@@ -91,6 +87,34 @@ void	fork_processes(t_params *params)
 	}
 }
 
+void	main_setup(t_params *params)
+{
+	pthread_t	thread;
+
+	thread = 0;
+	params->sem_forks = sem_open(SEM_FORKS, O_CREAT,
+		S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP, params->info.philo_max / 2); 
+	params->sem_print = sem_open(SEM_PRINT, O_CREAT,
+		S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP, 1); 
+	if (params->sem_forks == SEM_FAILED || params->sem_print == SEM_FAILED)
+		ft_error(params, "sem_open-main_setup");
+	if (params->track_philos_quota)
+	{
+		params->sem_count = sem_open(SEM_COUNT, O_CREAT,
+			S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP, 1); 
+		params->sem_plock = sem_open(SEM_PLOCK, O_CREAT,
+			S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP, 1); 
+		if (params->sem_count == SEM_FAILED || params->sem_plock == SEM_FAILED)
+			ft_error(params, "sem_open-main_setup");
+		if (pthread_create(&thread, NULL, &helper_routine, params) != 0)
+			ft_putendl_fd("pthread_create-main_setup", STDERR_FILENO);
+	}
+	return (thread);
+}
+
+// TODO: HANDLE ALL THE ERROR RETURNS AND PROPER RESOURCE CLEANUP PROCEDURES - currently
+// in a mess
+
 int	main(int argc, char *argv[])
 {
 	t_params	*params;
@@ -101,15 +125,7 @@ int	main(int argc, char *argv[])
 
 	fork_processes(params);
 
-	params->sem_forks = sem_open(SEM_FORKS, O_CREAT,
-			S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP, params->params_max / 2);
-	params->sem_print = sem_open(SEM_PRINT, O_CREAT,
-			S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP, 1);
-	if (params->sem_forks == SEM_FAILED || params->sem_print == SEM_FAILED)
-		ft_error(params, "sem_open-params create");
-
-	if (params->setup_fptr)
-		thread = (*params->setup_fptr)(params, MAIN);
+	thread = main_setup(params);
 
 	if (gettimeofday(&params->start_tv, NULL) == -1)
 		ft_putendl_fd("gettimeofday-main", STDERR_FILENO);
@@ -124,6 +140,5 @@ int	main(int argc, char *argv[])
 	if (sem_close(params->sem_print) == -1)
 		sem_perror(params->sem_print, "sem_close-main");
 	params_destroy(params);
-	free(pids);
 	sems_unlink();
 }
