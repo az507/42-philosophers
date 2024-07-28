@@ -6,25 +6,11 @@
 /*   By: achak <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/24 12:54:50 by achak             #+#    #+#             */
-/*   Updated: 2024/07/27 11:20:00 by achak            ###   ########.fr       */
+/*   Updated: 2024/07/28 15:32:23 by achak            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "philo_bonus.h"
-
-void	ft_putendl_fd(const char *str, int fd)
-{
-	while (*str)
-		write(fd, str++, 1);
-	write(fd, "\n", 1);
-}
-
-void	ft_error(t_philo *philo, const char *error_msg)
-{
-	ft_putendl_fd(error_msg, STDERR_FILENO);
-	philo_destroy(philo);
-	exit(EXIT_FAILURE);
-}
 
 int	ft_atoi(const char *nptr)
 {
@@ -57,16 +43,16 @@ void	*ft_malloc(size_t size)
 	return (memset(ptr, 0, size));
 }
 
-long	get_time_ms(t_philo *philo)
+long	get_time_ms(t_params *params)
 {
 	struct timeval	tv;
-	long	diff_seconds;
-	long	diff_microseconds;
+	long			diff_seconds;
+	long			diff_microseconds;
 
 	if (gettimeofday(&tv, NULL) == -1)
 		ft_putendl_fd("gettimeofday-get_time_ms", STDERR_FILENO);
-	diff_seconds = tv.tv_sec - philo->start_tv.tv_sec;
-	diff_microseconds = tv.tv_usec - philo->start_tv.tv_usec;
+	diff_seconds = tv.tv_sec - params->start_tv.tv_sec;
+	diff_microseconds = tv.tv_usec - params->start_tv.tv_usec;
 	if (diff_microseconds < 0)
 	{
 		diff_seconds -= 1;
