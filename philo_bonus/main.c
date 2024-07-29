@@ -6,7 +6,7 @@
 /*   By: achak <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/23 20:12:13 by achak             #+#    #+#             */
-/*   Updated: 2024/07/28 16:47:44 by achak            ###   ########.fr       */
+/*   Updated: 2024/07/29 15:37:08 by achak            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,9 +14,10 @@
 
 t_params	*params_create(int argc, char *argv[]);
 void		philo_routine(t_params *params);
-pthread_t	main_setup(t_params *params);
+//pthread_t	main_setup(t_params *params);
+void	*helper_routine(void *arg);
+void		main_setup(t_params *params);
 void		monitor_philos_status(t_params *params);
-void		sems_unlink(void);
 
 void	fork_processes(t_params *params)
 {
@@ -45,13 +46,17 @@ int	main(int argc, char *argv[])
 
 	sems_unlink();
 	params = params_create(argc, argv);
+	thread = 0;
+	pthread_create(&thread, NULL, &helper_routine, params);
 	fork_processes(params);
-	thread = main_setup(params);
+	//thread = main_setup(params);
+	main_setup(params);
 	if (gettimeofday(&params->start_tv, NULL) == -1)
 		ft_putendl_fd("gettimeofday-main", STDERR_FILENO);
 //	sem_wait(params->sem_print);
 //	printf("in main, addr: %p\n", params->sem_count);
 //	sem_post(params->sem_print);
+	sem_post(params->sem_tlock);
 	kill(0, SIGCONT);
 	monitor_philos_status(params);
 	if (thread && pthread_join(thread, NULL) != 0)

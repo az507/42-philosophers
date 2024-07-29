@@ -6,7 +6,7 @@
 /*   By: achak <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/28 15:11:53 by achak             #+#    #+#             */
-/*   Updated: 2024/07/28 15:32:02 by achak            ###   ########.fr       */
+/*   Updated: 2024/07/29 15:05:22 by achak            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,6 +39,7 @@ void	sems_unlink(void)
 	sem_unlink(SEM_COUNT);
 	sem_unlink(SEM_PRINT);
 	sem_unlink(SEM_PLOCK);
+	sem_unlink(SEM_TLOCK);
 }
 
 void	philos_cleanup(t_params *params)

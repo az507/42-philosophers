@@ -6,7 +6,7 @@
 /*   By: achak <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/23 20:04:24 by achak             #+#    #+#             */
-/*   Updated: 2024/07/28 16:15:31 by achak            ###   ########.fr       */
+/*   Updated: 2024/07/29 15:37:00 by achak            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,6 +32,7 @@
 # define SEM_PRINT "/print"
 # define SEM_COUNT "/count"
 # define SEM_PLOCK "/plock"
+# define SEM_TLOCK "/tlock"
 # define TAKE_FORK "has taken a fork"
 # define EAT "is eating"
 # define SLEEP "is sleeping"
@@ -56,11 +57,13 @@ typedef struct s_params
 	sem_t			*sem_print;
 	sem_t			*sem_count;
 	sem_t			*sem_plock;
+	sem_t			*sem_tlock;
 	long			time_last_ate;
 	int				philo_id;
 }	t_params;
 
 void	philos_cleanup(t_params *params);
+void	sems_unlink(void);
 
 void	sem_printf(t_params *params, const char *str);
 void	sem_perror(t_params *params, const char *error);

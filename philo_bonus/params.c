@@ -6,7 +6,7 @@
 /*   By: achak <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/24 12:52:31 by achak             #+#    #+#             */
-/*   Updated: 2024/07/28 15:32:37 by achak            ###   ########.fr       */
+/*   Updated: 2024/07/29 15:04:51 by achak            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,6 +46,9 @@ t_params	*params_create(int argc, char *argv[])
 	params->pids = ft_malloc(sizeof(pid_t) * params->info.philo_max);
 	if (!params->pids)
 		ft_error(params, "pids malloc");
+	params->sem_tlock = sem_open(SEM_TLOCK, O_CREAT | O_EXCL, S_IRWXU, 0);
+	if (params->sem_tlock == SEM_FAILED)
+		kill(0, SIGTERM);
 	return (params);
 }
 
@@ -63,6 +66,8 @@ void	params_destroy(t_params *params)
 			sem_close(params->sem_count);
 		if (params->sem_plock)
 			sem_close(params->sem_plock);
+		if (params->sem_tlock)
+			sem_close(params->sem_tlock);
 		free(params);
 	}
 }

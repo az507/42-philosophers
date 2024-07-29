@@ -6,7 +6,7 @@
 /*   By: achak <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/28 15:07:03 by achak             #+#    #+#             */
-/*   Updated: 2024/07/28 15:54:35 by achak            ###   ########.fr       */
+/*   Updated: 2024/07/29 13:30:02 by achak            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,6 +59,6 @@ void	philo_setup(t_params *params)
 	}
 	if (gettimeofday(&params->start_tv, NULL) == -1)
 		sem_perror(params, "gettimeofday-philo_setup");
-	free(params->pids);
-	params->pids = NULL;
+//	free(params->pids);
+//	params->pids = NULL;
 }
