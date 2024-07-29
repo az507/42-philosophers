@@ -6,7 +6,7 @@
 /*   By: achak <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/28 15:07:03 by achak             #+#    #+#             */
-/*   Updated: 2024/07/29 13:30:02 by achak            ###   ########.fr       */
+/*   Updated: 2024/07/29 19:18:16 by achak            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,17 +48,13 @@ void	philo_setup(t_params *params)
 	params->sem_forks = sem_open(SEM_FORKS, 0);
 	params->sem_print = sem_open(SEM_PRINT, 0);
 	if (params->sem_forks == SEM_FAILED || params->sem_print == SEM_FAILED)
-		return (ft_putendl_fd("sem_open-philo_setup", STDERR_FILENO),
-			(void)kill(0, SIGTRAP));
+		ft_error(params, "sem_open-philo_setup");
 	if (params->info.track_philo_quotas)
 	{
 		params->sem_count = sem_open(SEM_COUNT, 0);
-		params->sem_plock = sem_open(SEM_PLOCK, 0);
-		if (params->sem_count == SEM_FAILED || params->sem_plock == SEM_FAILED)
-			sem_perror(params, "sem_open-philo_setup");
+		if (params->sem_count == SEM_FAILED)
+			ft_error(params, "sem_open-philo_setup");
 	}
-	if (gettimeofday(&params->start_tv, NULL) == -1)
-		sem_perror(params, "gettimeofday-philo_setup");
-//	free(params->pids);
-//	params->pids = NULL;
+	free(params->pids);
+	params->pids = NULL;
 }

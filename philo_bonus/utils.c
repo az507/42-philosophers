@@ -6,7 +6,7 @@
 /*   By: achak <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/24 12:54:50 by achak             #+#    #+#             */
-/*   Updated: 2024/07/28 15:32:23 by achak            ###   ########.fr       */
+/*   Updated: 2024/07/29 19:15:48 by achak            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,7 +50,7 @@ long	get_time_ms(t_params *params)
 	long			diff_microseconds;
 
 	if (gettimeofday(&tv, NULL) == -1)
-		ft_putendl_fd("gettimeofday-get_time_ms", STDERR_FILENO);
+		ft_error(params, "gettimeofday-get_time_ms");
 	diff_seconds = tv.tv_sec - params->start_tv.tv_sec;
 	diff_microseconds = tv.tv_usec - params->start_tv.tv_usec;
 	if (diff_microseconds < 0)
