@@ -6,29 +6,11 @@
 /*   By: achak <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/28 15:11:53 by achak             #+#    #+#             */
-/*   Updated: 2024/07/29 19:16:34 by achak            ###   ########.fr       */
+/*   Updated: 2024/07/30 11:58:32 by achak            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "philo_bonus.h"
-
-void	ft_putendl_fd(const char *str, int fd)
-{
-	while (*str)
-		write(fd, str++, 1);
-	write(fd, "\n", 1);
-}
-
-void	ft_error(t_params *params, const char *error_msg)
-{
-	if (params->sem_print && params->sem_print != SEM_FAILED)
-		sem_wait(params->sem_print);
-	ft_putendl_fd(error_msg, STDERR_FILENO);
-	if (params->sem_print && params->sem_print != SEM_FAILED)
-		sem_post(params->sem_print);
-	params_destroy(params);
-	exit(EXIT_FAILURE);
-}
 
 void	sems_unlink(void)
 {
@@ -44,7 +26,7 @@ void	processes_kill(t_params *params, int sig)
 	i = 0;
 	while (i < params->info.philo_max && params->pids[i] > 0)
 		kill(params->pids[i++], sig);
-	if (params->info.track_philo_quotas && params->pids[i] > 0)
+	if (params->info.track_philos_quota && params->pids[i] > 0)
 		kill(params->pids[i], sig);
 }
 
@@ -56,6 +38,33 @@ void	processes_cleanup(t_params *params)
 	processes_kill(params, SIGKILL);
 	while (i < params->info.philo_max && params->pids[i] > 0)
 		waitpid(params->pids[i++], NULL, 0);
-	if (params->info.track_philo_quotas && params->pids[i] > 0)
+	if (params->info.track_philos_quota && params->pids[i] > 0)
 		waitpid(params->pids[i], NULL, 0);
+}
+
+void	params_destroy(t_params *params)
+{
+	if (params)
+	{
+		if (params->pids)
+			free(params->pids);
+		if (params->sem_forks != SEM_FAILED)
+			sem_close(params->sem_forks);
+		if (params->sem_print != SEM_FAILED)
+			sem_close(params->sem_print);
+		if (params->sem_count != SEM_FAILED)
+			sem_close(params->sem_count);
+		free(params);
+	}
+}
+
+void	ft_error(t_params *params, const char *error_msg)
+{
+	if (params->sem_print != SEM_FAILED)
+		sem_wait(params->sem_print);
+	ft_putendl_fd(error_msg, STDERR_FILENO);
+	if (params->sem_print != SEM_FAILED)
+		sem_post(params->sem_print);
+	params_destroy(params);
+	exit(EXIT_FAILURE);
 }

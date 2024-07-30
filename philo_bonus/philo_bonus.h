@@ -6,7 +6,7 @@
 /*   By: achak <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/23 20:04:24 by achak             #+#    #+#             */
-/*   Updated: 2024/07/29 19:16:42 by achak            ###   ########.fr       */
+/*   Updated: 2024/07/30 13:58:25 by achak            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,7 @@
 # include <sys/stat.h>
 # include <semaphore.h>
 # include <stdbool.h>
+# include <limits.h>
 
 # define MS_TO_MICROSEC 1000
 # define SEM_FORKS "/forks"
@@ -43,7 +44,7 @@ typedef struct s_info
 	int		time_eat;
 	int		time_sleep;
 	int		eat_max;
-	bool	track_philo_quotas;
+	bool	track_philos_quota;
 }	t_info;
 
 typedef struct s_params
@@ -59,14 +60,10 @@ typedef struct s_params
 }	t_params;
 
 void	processes_cleanup(t_params *params);
-void	sems_unlink(void);
-
-void	sem_printf(t_params *params, const char *str);
-
 void	params_destroy(t_params *params);
-
 void	ft_error(t_params *params, const char *error_msg);
 
+void	ft_sem_open(t_params *params, int oflag, mode_t mode);
 void	ft_putendl_fd(const char *msg, int fd);
 long	get_time_ms(t_params *params);
 

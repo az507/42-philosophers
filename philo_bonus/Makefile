@@ -6,15 +6,15 @@
 #    By: achak <marvin@42.fr>                       +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/07/23 20:10:13 by achak             #+#    #+#              #
-#    Updated: 2024/07/29 13:54:24 by achak            ###   ########.fr        #
+#    Updated: 2024/07/30 14:06:55 by achak            ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 NAME	= philo_bonus
-SRCS	= main.c params.c philo.c philo_utils.c monitor.c utils.c cleanup.c
+SRCS	= main.c philo.c routines.c utils.c cleanup.c
 OBJS	= $(SRCS:.c=.o)
 CC	= cc
-CFLAGS	= -Wall -Werror -Wextra -g -O1
+CFLAGS	= -Wall -Werror -Wextra -g
 
 all:	$(NAME)
 
