@@ -6,7 +6,7 @@
 #    By: achak <marvin@42.fr>                       +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/07/23 20:10:13 by achak             #+#    #+#              #
-#    Updated: 2024/07/30 14:06:55 by achak            ###   ########.fr        #
+#    Updated: 2024/07/31 20:10:46 by achak            ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -27,7 +27,7 @@ tsan:	fclean
 tsan:	$(NAME)
 
 $(NAME):$(OBJS)
-	$(CC) $(CFLAGS) $(OBJS) -o $(NAME) -pthread
+	$(CC) $(CFLAGS) $(OBJS) -o $(NAME) -lpthread -lrt
 
 %.o:%.c
 	$(CC) -c $(CFLAGS) $^ -o $@ -pthread

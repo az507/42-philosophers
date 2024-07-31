@@ -6,7 +6,7 @@
 /*   By: achak <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/28 15:11:53 by achak             #+#    #+#             */
-/*   Updated: 2024/07/31 12:40:47 by achak            ###   ########.fr       */
+/*   Updated: 2024/07/31 19:07:28 by achak            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,8 +15,8 @@
 void	sems_unlink(void)
 {
 	sem_unlink(SEM_FORKS);
-	sem_unlink(SEM_COUNT);
 	sem_unlink(SEM_PRINT);
+	sem_unlink(SEM_COUNT);
 }
 
 void	processes_kill(t_params *params, int sig)

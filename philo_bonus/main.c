@@ -6,12 +6,13 @@
 /*   By: achak <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/23 20:12:13 by achak             #+#    #+#             */
-/*   Updated: 2024/07/31 12:49:06 by achak            ###   ########.fr       */
+/*   Updated: 2024/07/31 20:07:13 by achak            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "philo_bonus.h"
 
+void	sems_open(t_params *params);
 int		ft_atoi(const char *nptr);
 void	*ft_malloc(size_t size);
 
@@ -51,7 +52,6 @@ static void	processes_create(t_params *params)
 			process_fork(params, &philo_routine, i++);
 		}
 	}
-	params->philo_id = INT_MAX;
 	if (params->info.track_philos_quota)
 		process_fork(params, &counter_routine, i);
 }
@@ -92,6 +92,7 @@ static t_params	*params_create(int argc, char *argv[])
 		ft_error(params, "pids malloc-params_create");
 	if (gettimeofday(&params->start_tv, NULL) == -1)
 		ft_error(params, "gettimeofday-params_create");
+	sems_open(params);
 	return (params);
 }
 
@@ -102,7 +103,6 @@ int	main(int argc, char *argv[])
 	sems_unlink();
 	params = params_create(argc, argv);
 	processes_create(params);
-	params->philo_id = 0;
 	monitor_routine(params);
 	params_destroy(params);
 	sems_unlink();

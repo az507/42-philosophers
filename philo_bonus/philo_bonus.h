@@ -6,7 +6,7 @@
 /*   By: achak <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/23 20:04:24 by achak             #+#    #+#             */
-/*   Updated: 2024/07/30 13:58:25 by achak            ###   ########.fr       */
+/*   Updated: 2024/07/31 20:16:16 by achak            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,6 @@
 # include <sys/stat.h>
 # include <semaphore.h>
 # include <stdbool.h>
-# include <limits.h>
 
 # define MS_TO_MICROSEC 1000
 # define SEM_FORKS "/forks"
