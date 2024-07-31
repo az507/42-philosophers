@@ -6,7 +6,7 @@
 /*   By: achak <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/23 20:12:13 by achak             #+#    #+#             */
-/*   Updated: 2024/07/30 14:02:05 by achak            ###   ########.fr       */
+/*   Updated: 2024/07/31 12:49:06 by achak            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,6 +51,7 @@ static void	processes_create(t_params *params)
 			process_fork(params, &philo_routine, i++);
 		}
 	}
+	params->philo_id = INT_MAX;
 	if (params->info.track_philos_quota)
 		process_fork(params, &counter_routine, i);
 }
@@ -101,7 +102,7 @@ int	main(int argc, char *argv[])
 	sems_unlink();
 	params = params_create(argc, argv);
 	processes_create(params);
-	params->philo_id = INT_MAX;
+	params->philo_id = 0;
 	monitor_routine(params);
 	params_destroy(params);
 	sems_unlink();

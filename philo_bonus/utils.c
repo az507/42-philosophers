@@ -6,11 +6,13 @@
 /*   By: achak <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/24 12:54:50 by achak             #+#    #+#             */
-/*   Updated: 2024/07/30 13:57:48 by achak            ###   ########.fr       */
+/*   Updated: 2024/07/31 13:53:12 by achak            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "philo_bonus.h"
+
+void	processes_kill(t_params *params, int sig);
 
 void	ft_sem_open(t_params *params, int oflag, mode_t mode)
 {
@@ -21,10 +23,13 @@ void	ft_sem_open(t_params *params, int oflag, mode_t mode)
 		if (params->info.track_philos_quota)
 			params->sem_count = sem_open(SEM_COUNT, oflag);
 	}
-	else if (params->philo_id == params->info.philo_max + 1)
+	else if (params->philo_id == INT_MAX)
 	{
+		dprintf(2, "in here\n");
 		params->sem_count = sem_open(SEM_COUNT, oflag);
 		params->sem_print = sem_open(SEM_PRINT, oflag);
+//		sem_close(params->sem_count);
+//		params->sem_count = SEM_FAILED;
 	}
 	else
 	{
@@ -34,11 +39,50 @@ void	ft_sem_open(t_params *params, int oflag, mode_t mode)
 		if (params->info.track_philos_quota)
 			params->sem_count = sem_open(SEM_COUNT, oflag, mode, 0);
 	}
-	if (params->sem_forks == SEM_FAILED || params->sem_print == SEM_FAILED
-		|| (params->info.track_philos_quota && params->sem_count == SEM_FAILED))
-		return (processes_cleanup(params),
-			ft_error(params, "sem_open-ft_sem_open"));
+	if (params->sem_forks == SEM_FAILED)
+		dprintf(2, "\tA\n");
+	if (params->sem_print == SEM_FAILED)
+		dprintf(2, "\tB, %d\n", getpid());
+	if (params->sem_count == SEM_FAILED)
+		dprintf(2, "\tC\n");
+	if ((params->philo_id != INT_MAX
+		&& (params->sem_forks == SEM_FAILED || params->sem_print == SEM_FAILED))
+		|| (params->philo_id
+		&& params->info.track_philos_quota && params->sem_count == SEM_FAILED))
+	{
+		perror("sem_open");
+		//kill(0, SIGTRAP);
+		if (!params->philo_id)
+		{
+			dprintf(2, "\toption 1\n");
+			processes_cleanup(params);
+		}
+		else if (params->philo_id == INT_MAX)
+		{
+			dprintf(2, "\toption 2\n");
+			processes_kill(params, SIGABRT);
+		}
+		//ft_error(params, "sem_open-ft_sem_open");
+		params_destroy(params);
+		exit(EXIT_FAILURE);
+	}
 }
+
+//void	sems_open(t_params *params)
+//{
+//	if (params->philo_id >= params->info.phlo_max)
+//	{
+//		ft_sem_open(params, 0, (mode_t)0);
+//		ft_sem_open(params, 0, (mode_t)0);
+//		if (params->info.track_philos_quota)
+//			ft_sem_open(params, 0, (mode_t)0);
+//	}
+//	else if (params->philo_id == INT_MAX)
+//		ft_sem_open(params, 0, (mode_t)0);
+//	else
+//	{
+//		ft_sem_open(params, 0, 
+//}
 
 void	ft_putendl_fd(const char *str, int fd)
 {
@@ -88,10 +132,5 @@ long	get_time_ms(t_params *params)
 		ft_error(params, "gettimeofday-get_time_ms");
 	diff_seconds = tv.tv_sec - params->start_tv.tv_sec;
 	diff_microseconds = tv.tv_usec - params->start_tv.tv_usec;
-	if (diff_microseconds < 0)
-	{
-		diff_seconds -= 1;
-		diff_microseconds += 1000000;
-	}
 	return (diff_seconds * 1000 + diff_microseconds / 1000);
 }

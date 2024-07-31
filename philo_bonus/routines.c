@@ -6,7 +6,7 @@
 /*   By: achak <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 17:01:28 by achak             #+#    #+#             */
-/*   Updated: 2024/07/30 13:58:07 by achak            ###   ########.fr       */
+/*   Updated: 2024/07/31 13:51:01 by achak            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,8 +21,6 @@ void	philo_eat(t_params *params);
 
 void	one_philo_routine(t_params *params)
 {
-	free(params->pids);
-	params->pids = NULL;
 	while (true)
 		ft_usleep(params, params->info.time_eat);
 }
@@ -33,8 +31,6 @@ void	philo_routine(t_params *params)
 
 	times_ate = 0;
 	ft_sem_open(params, 0, (mode_t)0);
-	free(params->pids);
-	params->pids = NULL;
 	while (true)
 	{
 		philo_eat(params);
@@ -55,13 +51,13 @@ void	counter_routine(t_params *params)
 	while (true)
 	{
 		sem_wait(params->sem_count);
-		if (kill(params->pids[0], SIGCHLD) == -1)
-			break ;
-		if (++nbr_philos_done == params->info.philo_max)
-		{
+		if (kill(params->pids[0], 0) == -1)
+			;
+		else if (++nbr_philos_done == params->info.philo_max)
 			processes_kill(params, SIGKILL);
-			break ;
-		}
+		else
+			continue ;
+		break ;
 	}
 	params_destroy(params);
 	exit(EXIT_SUCCESS);
@@ -79,7 +75,7 @@ static void	print_philo_status(t_params *params, int wstatus, int i)
 	else if (WIFSIGNALED(wstatus))
 	{
 		if (WTERMSIG(wstatus) == SIGABRT)
-			ft_putendl_fd("Critical error occurred\n", STDERR_FILENO);
+			ft_putendl_fd("Critical error occurred 2", STDERR_FILENO);
 		else
 			printf("%ld all philos are done eating\n", get_time_ms(params));
 	}

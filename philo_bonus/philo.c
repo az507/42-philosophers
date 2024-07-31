@@ -6,7 +6,7 @@
 /*   By: achak <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/24 17:06:07 by achak             #+#    #+#             */
-/*   Updated: 2024/07/30 13:57:30 by achak            ###   ########.fr       */
+/*   Updated: 2024/07/31 10:51:59 by achak            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,8 +16,8 @@ static void	sem_printf(t_params *params, const char *str)
 {
 	long	current_time;
 
-	current_time = get_time_ms(params);
 	sem_wait(params->sem_print);
+	current_time = get_time_ms(params);
 	printf("%ld philosopher %d %s\n", current_time, params->philo_id, str);
 	if (str[0] == 'h')
 		printf("%ld philosopher %d %s\n", current_time, params->philo_id, str);
