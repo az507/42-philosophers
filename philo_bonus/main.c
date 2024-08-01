@@ -6,7 +6,7 @@
 /*   By: achak <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/23 20:12:13 by achak             #+#    #+#             */
-/*   Updated: 2024/07/31 20:07:13 by achak            ###   ########.fr       */
+/*   Updated: 2024/08/01 11:13:36 by achak            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,7 +34,6 @@ static void	process_fork(t_params *params, void (*process_routine)(t_params *),
 	}
 	if (!params->pids[i])
 		(*process_routine)(params);
-	kill(params->pids[i], SIGSTOP);
 }
 
 static void	processes_create(t_params *params)

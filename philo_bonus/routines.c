@@ -6,7 +6,7 @@
 /*   By: achak <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 17:01:28 by achak             #+#    #+#             */
-/*   Updated: 2024/07/31 20:07:52 by achak            ###   ########.fr       */
+/*   Updated: 2024/08/01 11:13:32 by achak            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,7 +64,6 @@ void	monitor_routine(t_params *params)
 	int	i;
 
 	i = -1;
-	kill(0, SIGCONT);
 	while (true)
 	{
 		i = -1;
