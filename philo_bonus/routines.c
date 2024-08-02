@@ -6,7 +6,7 @@
 /*   By: achak <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 17:01:28 by achak             #+#    #+#             */
-/*   Updated: 2024/08/01 11:13:32 by achak            ###   ########.fr       */
+/*   Updated: 2024/08/02 14:43:52 by achak            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,7 @@ void	philo_eat(t_params *params);
 
 void	one_philo_routine(t_params *params)
 {
+	printf("%ld philosopher 1 has taken a fork\n", get_time_ms(params));
 	while (true)
 		ft_usleep(params, params->info.time_eat);
 }
