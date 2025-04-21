@@ -12,9 +12,11 @@
 
 NAME	= philo_bonus
 SRCS	= main.c philo.c routines.c utils.c cleanup.c
-OBJS	= $(SRCS:.c=.o)
-CC	= cc
-CFLAGS	= -Wall -Werror -Wextra -g
+OBJ_DIR	= objs
+OBJS	= $(addprefix $(OBJ_DIR)/,$(notdir $(SRCS:.c=.o)))
+CC		= cc
+CFLAGS	= -Wall -Werror -Wextra
+VPATH	= srcs
 
 all:	$(NAME)
 
@@ -27,16 +29,17 @@ tsan:	fclean
 tsan:	$(NAME)
 
 $(NAME):$(OBJS)
-	$(CC) $(CFLAGS) $(OBJS) -o $(NAME) -lpthread -lrt
+	$(CC) -I. $(CFLAGS) $(OBJS) -o $(NAME) -lpthread -lrt
 
-%.o:%.c
-	$(CC) -c $(CFLAGS) $^ -o $@ -pthread
+$(OBJ_DIR)/%.o:%.c
+	@mkdir -p $(OBJ_DIR)
+	$(CC) -I. $(CFLAGS) -c $< -o $@ -pthread
 
 clean:
-	rm $(OBJS)
+	rm -rf $(OBJ_DIR)
 
 fclean:	clean
-	rm $(NAME)
+	rm -f $(NAME)
 
 re:	fclean all
 

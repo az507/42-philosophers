@@ -11,50 +11,28 @@
 # **************************************************************************** #
 
 NAME	= philo
-CC1	= cc -g -Wall -Werror -Wextra
-CC2	= cc -g -Wall -Werror -Wextra -fsanitize=address
-CC3	= cc -g -Wall -Werror -Wextra -fsanitize=thread
-SRCS	= $(wildcard *.c)
-ARGS	= 0
+SRCS	= $(shell find srcs -type f -name "*.c")
+OBJ_DIR	= objs
+OBJS	= $(addprefix $(OBJ_DIR)/,$(notdir $(SRCS:.c=.o)))
+CC		= cc
+IFLAGS	= -I.
+CFLAGS	= -Wall -Werror -Wextra
+VPATH	= srcs
 
 all:	$(NAME)
 
-$(NAME):$(SRCS)
-	$(CC3) $(SRCS) -pthread -o $(NAME)
+$(NAME):$(OBJS)
+	$(CC) $(IFLAGS) $(CFLAGS) $(OBJS) -o $(NAME)
 
-1:
-	$(CC1) $(SRCS) -pthread -o $(NAME)
-	clear && valgrind --leak-check=full --show-leak-kinds=all ./$(NAME) $(ARGS)
-
-2:
-	$(CC1) $(SRCS) -pthread -o $(NAME)
-	clear && valgrind --tool=drd --fair-sched=yes ./$(NAME) $(ARGS)
-	@#clear && valgrind --tool=drd --check-stack-var=no --segment-merging=yes
-	@#--show-confl-seg=yes --show-stack-usage=no --var-info=no --fair-sched=yes
-
-3:
-	$(CC1) $(SRCS) -pthread -o $(NAME)
-	clear && valgrind --tool=helgrind --fair-sched=yes ./$(NAME) $(ARGS)
-
-3a:
-	$(CC1) $(SRCS) -pthread -o $(NAME)
-	clear && valgrind --tool=helgrind --fair-sched=yes --history-level=none ./$(NAME) $(ARGS)
-	@#clear && valgrind --tool=callgrind ./$(NAME) $(ARGS)
-
-4:
-	$(CC2) $(SRCS) -pthread -o $(NAME)
-	clear && ./$(NAME) $(ARGS)
-
-5:
-	$(CC3) $(SRCS) -pthread -o $(NAME)
-	clear && ./$(NAME) $(ARGS)
+$(OBJ_DIR)/%.o:%.c
+	@mkdir -p $(OBJ_DIR)
+	$(CC) $(IFLAGS) $(CFLAGS) -c $< -o $@
 
 clean:
-ifneq ("$(wildcard $(NAME))","")
-	rm $(NAME)
-endif
+	rm -rf $(OBJ_DIR)
 
 fclean:	clean
+	rm -f $(NAME)
 
 re:	fclean all
 
