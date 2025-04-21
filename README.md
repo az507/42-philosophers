@@ -43,3 +43,7 @@ make
 | `time_to_eat` (in ms) | 	Time it takes a philosopher to eat |
 | `time_to_sleep` (in ms) | Time a philosopher will spend sleeping |
 | `number_of_times_each_philosopher_must_eat ` (*optional*) | If specified, simulation stops when each philosopher has eaten this many times |
+
+## Bonus
+
+> Work in progress

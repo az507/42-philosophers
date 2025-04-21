@@ -86,13 +86,3 @@ void	perform_cleanup(t_philo *philo_arr, t_shared *shared_args)
 	free(philo_arr[0].first_fork);
 	free(philo_arr);
 }
-
-/*#include <stdio.h>
-
-int	main(void)
-{
-	const char *nptr = "    	 	   +2147483647abcde90";
-
-	printf("ft_atoi: %d\n", ft_atoi(nptr));
-	printf("atoi: %d\n", atoi(nptr));
-}*/
